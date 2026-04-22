@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import seaborn as sns
@@ -22,8 +23,14 @@ def _style():
     })
 
 def _ordered(df, col='sentiment_category'):
+    df = df.copy()
     df[col] = pd.Categorical(df[col], categories=ORDERED_CATS, ordered=True)
     return df.sort_values(col)
+
+def _save(save_dir, filename):
+    """Safely create output directory and return full save path."""
+    os.makedirs(save_dir, exist_ok=True)
+    return os.path.join(save_dir, filename)
 
 
 def plot_pnl_vs_sentiment(df, save_dir='outputs/plots/'):
@@ -35,15 +42,15 @@ def plot_pnl_vs_sentiment(df, save_dir='outputs/plots/'):
     colors = [PALETTE.get(c, '#888') for c in agg['sentiment_category']]
 
     fig, ax = plt.subplots()
-    bars = ax.bar(agg['sentiment_category'], agg['mean'], yerr=agg['std'],
-                  color=colors, capsize=5, edgecolor='white', linewidth=0.8)
+    ax.bar(agg['sentiment_category'], agg['mean'], yerr=agg['std'],
+           color=colors, capsize=5, edgecolor='white', linewidth=0.8)
     ax.axhline(0, color='grey', linewidth=0.8, linestyle='--')
     ax.set_title("Average PnL per Trade by Sentiment\n(Error bars = ±1 std dev)")
     ax.set_ylabel("Avg PnL (USD)")
     ax.set_xlabel("Sentiment Category")
     plt.tight_layout()
-    plt.savefig(f'{save_dir}pnl_vs_sentiment.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'pnl_vs_sentiment.png'), dpi=150)
+    plt.show()
 
 
 def plot_win_rate_vs_sentiment(df, save_dir='outputs/plots/'):
@@ -63,15 +70,15 @@ def plot_win_rate_vs_sentiment(df, save_dir='outputs/plots/'):
     ax.set_xlabel("Sentiment Category")
     ax.legend()
     plt.tight_layout()
-    plt.savefig(f'{save_dir}win_rate_vs_sentiment.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'win_rate_vs_sentiment.png'), dpi=150)
+    plt.show()
 
 
 def plot_leverage_vs_sentiment(df, save_dir='outputs/plots/'):
     _style()
     if 'sentiment_category' not in df.columns or 'leverage' not in df.columns:
         return
-    plot_df = _ordered(df.copy())
+    plot_df = _ordered(df)
 
     fig, ax = plt.subplots()
     sns.boxplot(data=plot_df, x='sentiment_category', y='leverage',
@@ -81,8 +88,8 @@ def plot_leverage_vs_sentiment(df, save_dir='outputs/plots/'):
     ax.set_ylabel("Leverage (x)")
     ax.set_xlabel("Sentiment Category")
     plt.tight_layout()
-    plt.savefig(f'{save_dir}leverage_vs_sentiment.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'leverage_vs_sentiment.png'), dpi=150)
+    plt.show()
 
 
 def plot_risk_adjusted(perf_df, save_dir='outputs/plots/'):
@@ -106,8 +113,8 @@ def plot_risk_adjusted(perf_df, save_dir='outputs/plots/'):
 
     fig.suptitle("Return vs Risk by Sentiment Category", fontsize=15, fontweight='bold')
     plt.tight_layout()
-    plt.savefig(f'{save_dir}risk_adjusted.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'risk_adjusted.png'), dpi=150)
+    plt.show()
 
 
 def plot_segmented_performance(seg_df, save_dir='outputs/plots/'):
@@ -127,8 +134,8 @@ def plot_segmented_performance(seg_df, save_dir='outputs/plots/'):
     ax.set_xlabel("Sentiment Category")
     ax.legend(title='Trader Segment')
     plt.tight_layout()
-    plt.savefig(f'{save_dir}segmented_performance.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'segmented_performance.png'), dpi=150)
+    plt.show()
 
 
 def plot_simulation(sim_results, save_dir='outputs/plots/'):
@@ -138,7 +145,7 @@ def plot_simulation(sim_results, save_dir='outputs/plots/'):
         return
 
     labels = list(sim_results.keys())
-    avg_pnl = [sim_results[k]['avg_pnl'] for k in labels]
+    avg_pnl   = [sim_results[k]['avg_pnl'] for k in labels]
     win_rates = [sim_results[k]['win_rate'] * 100 for k in labels]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -154,5 +161,5 @@ def plot_simulation(sim_results, save_dir='outputs/plots/'):
 
     fig.suptitle("Simulation: All Trades vs Fear-Only Sentiment Strategy", fontsize=14, fontweight='bold')
     plt.tight_layout()
-    plt.savefig(f'{save_dir}simulation.png', dpi=150)
-    plt.close()
+    plt.savefig(_save(save_dir, 'simulation.png'), dpi=150)
+    plt.show()
