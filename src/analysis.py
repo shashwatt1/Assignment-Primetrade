@@ -17,16 +17,23 @@ def calculate_metrics(df):
 
 
 def assign_sentiment_category(df):
-    """Map numeric Fear & Greed values to labeled buckets."""
-    bins = [0, 25, 45, 54, 75, 100]
-    labels = ['Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed']
-    df['sentiment_category'] = pd.cut(df['value'], bins=bins, labels=labels, include_lowest=True)
+    # Detect the sentiment column dynamically — handles lowercase, suffixed, and aliased variants
+    candidates = ['sentiment', 'classification', 'Classification',
+                  'Classification_x', 'Classification_y',
+                  'classification_sentiment', 'sentiment_sentiment']
+    sentiment_col = next((c for c in candidates if c in df.columns), None)
+    if sentiment_col is None:
+        raise KeyError(
+            f"No sentiment column found in DataFrame. "
+            f"Available columns: {list(df.columns)}"
+        )
+    df['sentiment_category'] = df[sentiment_col]
     return df
 
 
 def get_sentiment_wise_performance(df):
     """Aggregate key performance metrics per sentiment category."""
-    if df.empty or 'value' not in df.columns or 'profit' not in df.columns:
+    if df.empty or 'profit' not in df.columns:
         return pd.DataFrame()
 
     df = assign_sentiment_category(df)

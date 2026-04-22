@@ -82,7 +82,8 @@ def plot_leverage_vs_sentiment(df, save_dir='outputs/plots/'):
 
     fig, ax = plt.subplots()
     sns.boxplot(data=plot_df, x='sentiment_category', y='leverage',
-                palette=PALETTE, order=ORDERED_CATS, ax=ax,
+                hue='sentiment_category', palette=PALETTE, order=ORDERED_CATS,
+                legend=False, ax=ax,
                 flierprops=dict(marker='o', markersize=3, alpha=0.4))
     ax.set_title("Leverage Distribution by Sentiment Category")
     ax.set_ylabel("Leverage (x)")
